@@ -1,26 +1,22 @@
-from selenium import webdriver
 import re
 import time
-import pandas as pd
 from multiprocessing import Process, Queue
+from functools import reduce
+import pandas as pd
+from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+DRIVER_PATH = 'geckodriver.exe'
 
-
-def getPing():
+def getPing(out_q):
     options = Options()
     options.headless = True
-    # options.add_argument("--ignore-certificate-errors")
-    # options.add_argument("acceptInsecureCerts")
-    # options.add_argument('--disable-web-security')
-    # options.add_argument('--allow-running-insecure-content')
-    # options.set_capability("acceptInsecureCerts", True)
-
-    driver = webdriver.Firefox(options=options)
+    driver = webdriver.Firefox(executable_path=DRIVER_PATH,options=options)
     driver.get('https://xymu.github.io/maple.watch/#GMS-Reboot')
 
     time.sleep(5)
 
     all_servers = driver.find_element_by_class_name("servers").text.split('ms')
+    driver.quit()
 
     temp_channels = []
     for server in all_servers[:30]:
@@ -38,21 +34,30 @@ def getPing():
 
     channels = pd.DataFrame(temp_channels[:30], columns=['channel', 'ping'])
     channels.set_index(['channel'], inplace=True)
-    return channels
+    out_q.put(channels)
 
 def mp_ping(numProcs):
-    
-
-
-if __name__ == '__main__':
     out_q = Queue()
     procs = []
-    for i in range(3):
-        p = Process(target=)
+    for i in range(numProcs):
+        p = Process(target=getPing, args=(out_q,))
+        procs.append(p)
+        p.start()
+    results = []
+    for i in range(numProcs):
+        results.append(out_q.get())
+    for p in procs:
+        p.join()
+    return results
 
+if __name__ == "__main__":
+    import multiprocessing
+    num_cores = multiprocessing.cpu_count()
 
-    avg = ((first['ping'] + second['ping'] + third['ping']) / 3).sort_values()
+    results = mp_ping(numProcs=num_cores)
+    avg = reduce(lambda x,y: x.add(y, fill_value=0), results)
+    avg = (avg['ping'] / len(results)).sort_values()
 
     for i, ping in enumerate(avg):
-        channel = avg.sort_values().index[i]
-        print(channel, f"{ping:.2f}")
+        channel = avg.index[i]
+        print(channel, '|', f"{ping:.2f}ms")
