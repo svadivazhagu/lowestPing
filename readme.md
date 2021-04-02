@@ -4,6 +4,9 @@
 ## running
 run `pip install -r requirements.txt` in shell (ideally from a virtual environment)
 
+after,
+`python lowest_ch_ping.py`
+
 requirements:
 - python 3
 - selenium
