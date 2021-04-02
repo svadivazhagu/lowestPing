@@ -1,6 +1,12 @@
 # MapleStory Ping Ranker
 ## GMS-Reboot Server 
 
+## about
+multiprocessed approach to identify the ping on MapleStory channels, and ranking them (ascending) to show which is the
+lowest latency channel
+
+
+
 ## running
 run `pip install -r requirements.txt` in shell (ideally from a virtual environment)
 
