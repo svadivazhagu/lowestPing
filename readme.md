@@ -3,7 +3,7 @@
 
 ## about
 multiprocessed approach to identify the ping on MapleStory channels, and ranking them (ascending) to show which is the
-lowest latency channel
+lowest latency channel.
 
 
 
